@@ -1,4 +1,5 @@
 const Leave = require('../models/Leave');
+const AuditLog = require('../models/AuditLog');
 const logger = require('../utils/logger');
 
 /** Small guard shared by update/cancel: only the owner or a manager may act, and only while PENDING for edits. */
@@ -29,6 +30,7 @@ function createLeave(req, res) {
     reason,
   });
 
+  AuditLog.record({ leaveId: leave.id, actorId: req.user.id, action: 'CREATED' });
   logger.info('Leave request created', { leaveId: leave.id, employeeId: req.user.id });
   res.status(201).json({ leave });
 }
@@ -59,7 +61,8 @@ function listPending(req, res) {
 function getLeave(req, res) {
   const leave = Leave.findById(Number(req.params.id));
   assertOwnerOrManager(leave, req.user);
-  res.json({ leave });
+  const auditLog = AuditLog.findByLeave(leave.id);
+  res.json({ leave, auditLog });
 }
 
 /**
@@ -89,6 +92,7 @@ function updateLeave(req, res) {
     reason,
   });
 
+  AuditLog.record({ leaveId: id, actorId: req.user.id, action: 'UPDATED' });
   res.json({ leave: updated });
 }
 
@@ -106,6 +110,7 @@ function cancelLeave(req, res) {
   }
 
   const updated = Leave.update(id, { status: 'CANCELLED' });
+  AuditLog.record({ leaveId: id, actorId: req.user.id, action: 'CANCELLED' });
   res.json({ leave: updated });
 }
 
@@ -124,6 +129,7 @@ function approveLeave(req, res) {
     reviewed_by: req.user.id,
   });
 
+  AuditLog.record({ leaveId: id, actorId: req.user.id, action: 'APPROVED', details: req.body.comments || null });
   logger.info('Leave approved', { leaveId: id, managerId: req.user.id });
   res.json({ leave: updated });
 }
@@ -143,6 +149,7 @@ function rejectLeave(req, res) {
     reviewed_by: req.user.id,
   });
 
+  AuditLog.record({ leaveId: id, actorId: req.user.id, action: 'REJECTED', details: req.body.comments });
   logger.info('Leave rejected', { leaveId: id, managerId: req.user.id });
   res.json({ leave: updated });
 }

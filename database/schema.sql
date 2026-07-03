@@ -52,6 +52,20 @@ CREATE INDEX idx_leaves_status      ON leaves(status);
 CREATE INDEX idx_leaves_type        ON leaves(leave_type);
 CREATE INDEX idx_employees_email    ON employees(email);
 
+-- Immutable audit trail: one row per status change on a leave request.
+-- Insert-only by design (no UPDATE/DELETE in application code), so it can
+-- be trusted as a record of who did what, and when.
+CREATE TABLE audit_logs (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  leave_id     INTEGER NOT NULL REFERENCES leaves(id) ON DELETE CASCADE,
+  actor_id     INTEGER REFERENCES employees(id) ON DELETE SET NULL,
+  action       TEXT NOT NULL CHECK (action IN ('CREATED', 'UPDATED', 'CANCELLED', 'APPROVED', 'REJECTED')),
+  details      TEXT,                          -- e.g. the manager's comment for APPROVED/REJECTED
+  created_at   TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX idx_audit_logs_leave_id ON audit_logs(leave_id);
+
 -- ---------------------------------------------------------------------
 -- Porting to PostgreSQL:
 --   * INTEGER PRIMARY KEY AUTOINCREMENT -> SERIAL PRIMARY KEY / GENERATED ALWAYS AS IDENTITY

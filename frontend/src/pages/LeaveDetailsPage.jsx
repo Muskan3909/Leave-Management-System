@@ -11,6 +11,7 @@ export default function LeaveDetailsPage() {
   const navigate = useNavigate();
 
   const [leave, setLeave] = useState(null);
+  const [auditLog, setAuditLog] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [comments, setComments] = useState('');
@@ -20,7 +21,10 @@ export default function LeaveDetailsPage() {
     setLoading(true);
     api
       .get(`/leaves/${id}`)
-      .then(({ data }) => setLeave(data.leave))
+      .then(({ data }) => {
+        setLeave(data.leave);
+        setAuditLog(data.auditLog || []);
+      })
       .catch((err) => setError(extractErrorMessage(err)))
       .finally(() => setLoading(false));
   }
@@ -35,8 +39,8 @@ export default function LeaveDetailsPage() {
     }
     setActionLoading(true);
     try {
-      const { data } = await api.put(`/leaves/${id}/${decision}`, { comments: comments.trim() || undefined });
-      setLeave(data.leave);
+      await api.put(`/leaves/${id}/${decision}`, { comments: comments.trim() || undefined });
+      load();
     } catch (err) {
       setError(extractErrorMessage(err));
     } finally {
@@ -135,6 +139,25 @@ export default function LeaveDetailsPage() {
           </div>
         )}
       </div>
+
+      {auditLog.length > 0 && (
+        <div className="rounded-2xl border border-ink-100 bg-white p-6 shadow-panel">
+          <h2 className="font-display text-lg font-semibold text-ink-900">Activity log</h2>
+          <ol className="mt-4 space-y-4 border-l border-ink-100 pl-4">
+            {auditLog.map((entry) => (
+              <li key={entry.id} className="relative">
+                <span className="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full bg-brand-500" />
+                <p className="text-sm font-medium text-ink-800">
+                  {entry.action.charAt(0) + entry.action.slice(1).toLowerCase()}
+                  {entry.actor_name && <span className="font-normal text-ink-500"> by {entry.actor_name}</span>}
+                </p>
+                {entry.details && <p className="mt-0.5 text-sm text-ink-500">"{entry.details}"</p>}
+                <p className="mt-0.5 text-xs text-ink-400">{entry.created_at}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
     </div>
   );
 }

@@ -53,6 +53,20 @@ function initSchema() {
     CREATE INDEX IF NOT EXISTS idx_leaves_status ON leaves(status);
     CREATE INDEX IF NOT EXISTS idx_leaves_type ON leaves(leave_type);
     CREATE INDEX IF NOT EXISTS idx_employees_email ON employees(email);
+
+    -- Immutable trail of every status change made to a leave request
+    -- (submitted, edited, cancelled, approved, rejected). Never updated or
+    -- deleted, only inserted into, so it stays a reliable audit record.
+    CREATE TABLE IF NOT EXISTS audit_logs (
+      id           INTEGER PRIMARY KEY AUTOINCREMENT,
+      leave_id     INTEGER NOT NULL REFERENCES leaves(id) ON DELETE CASCADE,
+      actor_id     INTEGER REFERENCES employees(id) ON DELETE SET NULL,
+      action       TEXT NOT NULL CHECK (action IN ('CREATED', 'UPDATED', 'CANCELLED', 'APPROVED', 'REJECTED')),
+      details      TEXT,
+      created_at   TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_audit_logs_leave_id ON audit_logs(leave_id);
   `);
 }
 
