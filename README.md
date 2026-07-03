@@ -28,6 +28,13 @@ team-wide activity on a dashboard.
 - Pending-approvals queue, request detail view, approve/reject with comments
 - Search and filter across all employees' requests
 
+**Bonus**
+- Role-Based Access Control (route guards on both frontend and backend)
+- API rate limiting (general + a stricter limit on login to slow brute-forcing)
+- Append-only audit log on every leave request (created/updated/cancelled/approved/rejected, with who and when), visible as an activity timeline on the request detail page
+- Docker support for both services via Docker Compose
+- Mobile-responsive layout throughout
+
 ## Technology Stack
 
 | Layer | Choice | Why |
@@ -37,6 +44,8 @@ team-wide activity on a dashboard.
 | Database | SQLite via Node's built-in `node:sqlite` | Zero external services to install; same relational schema documented in `database/schema.sql` ports directly to Postgres/MySQL |
 | Auth | JWT (`jsonwebtoken`) + `bcryptjs` for password hashing | Stateless, standard for a REST API |
 | Validation | `express-validator` | Declarative, testable input validation with consistent error shape |
+| Rate limiting | `express-rate-limit` | Protects against brute-force login attempts and API abuse |
+| Containerization | Docker + Docker Compose | One-command startup for both services, no local Node version dependency |
 
 ## Folder Structure
 
@@ -45,14 +54,15 @@ leave-management-system/
 ├── backend/
 │   ├── src/
 │   │   ├── config/db.js            # DB connection + schema bootstrap
-│   │   ├── models/                 # Data-access layer (Employee, Leave)
-│   │   ├── middleware/             # auth, validation, error handling
+│   │   ├── models/                 # Data-access layer (Employee, Leave, AuditLog)
+│   │   ├── middleware/             # auth, validation, rate limiting, error handling
 │   │   ├── controllers/            # Request handlers
 │   │   ├── routes/                 # Express routers
 │   │   ├── utils/                  # jwt, logger, seed script
 │   │   ├── app.js                  # Express app (middleware + routes)
 │   │   └── server.js               # Entry point
 │   ├── database/                   # SQLite file lives here at runtime
+│   ├── Dockerfile
 │   ├── .env.example
 │   └── package.json
 ├── frontend/
@@ -62,11 +72,14 @@ leave-management-system/
 │   │   ├── context/AuthContext.jsx # Global auth/session state
 │   │   ├── services/api.js         # Axios instance + error helper
 │   │   └── App.jsx                 # Routing
+│   ├── Dockerfile
+│   ├── nginx.conf                  # Serves the built SPA (with client-side routing support)
 │   ├── .env.example
 │   └── package.json
 ├── database/schema.sql             # Documented, portable reference schema
 ├── docs/API.md                     # Full endpoint reference
 ├── postman/LeaveManagement.postman_collection.json
+├── docker-compose.yml
 ├── .gitignore
 └── README.md
 ```
@@ -102,6 +115,29 @@ npm run dev                # starts the app on http://localhost:5173
 ```
 
 Open **http://localhost:5173** in your browser.
+
+### Alternative: run everything with Docker
+
+If you have Docker installed, you can skip steps 2–3 entirely:
+
+```bash
+docker compose up --build
+```
+
+This builds and starts both services — backend on `http://localhost:5000`,
+frontend on `http://localhost:5173` (served via nginx). The SQLite file
+persists in a named Docker volume across restarts.
+
+To seed sample data into the running container:
+```bash
+docker compose exec backend npm run seed
+```
+
+To stop everything:
+```bash
+docker compose down          # keeps the data volume
+docker compose down -v       # also wipes the database
+```
 
 ## Environment Variables
 
@@ -183,5 +219,5 @@ Created by `npm run seed`:
 - Email notifications on status changes
 - Refresh tokens and a server-side session/denylist for real logout
 - Unit + integration tests and CI (GitHub Actions)
-- Docker Compose for one-command startup
-- Audit log of all status changes, pagination on list endpoints
+- Pagination on list endpoints for large datasets
+- A dedicated employee directory page for managers (the API already supports it via `GET /employees`)

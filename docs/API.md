@@ -141,9 +141,20 @@ Manager's approval queue — shortcut for `GET /leaves?status=PENDING` across ev
 ---
 
 ### `GET /leaves/:id`
-Fetch one leave request. Owner or any manager may view it.
+Fetch one leave request, including its audit trail. Owner or any manager may view it.
 
-**200** → `{ "leave": { ... } }`
+**200**
+```json
+{
+  "leave": { ... },
+  "auditLog": [
+    { "id": 1, "leave_id": 3, "actor_id": 2, "actor_name": "Alice Verma", "action": "CREATED", "details": null, "created_at": "..." },
+    { "id": 2, "leave_id": 3, "actor_id": 1, "actor_name": "Priya Sharma", "action": "APPROVED", "details": "Get well soon", "created_at": "..." }
+  ]
+}
+```
+`action` ∈ `CREATED | UPDATED | CANCELLED | APPROVED | REJECTED`. The audit log is append-only — every status change is recorded automatically and can't be edited or deleted through the API.
+
 **Errors:** `403` (not your request and not a manager), `404`
 
 ---
@@ -215,4 +226,13 @@ Validation errors additionally include field-level detail:
 | 404 | Resource not found |
 | 409 | Conflict with current state (e.g. editing a non-pending request) |
 | 422 | Validation failed |
+| 429 | Rate limit exceeded |
 | 500 | Unexpected server error |
+
+## Rate limiting
+
+- All `/api/*` routes: **300 requests / 15 minutes** per client.
+- `POST /auth/login` specifically: **10 attempts / 15 minutes** per client, to slow down credential-stuffing attempts.
+
+Responses include standard `RateLimit-*` headers. Exceeding a limit returns
+`429` with `{ "error": "..." }`.

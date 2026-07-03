@@ -1,13 +1,22 @@
 {
   "info": {
     "name": "Leave Management System",
-    "description": "Employee Leave Management System API. Run 'Login as Employee' or 'Login as Manager' first — the token is auto-saved to the {{token}} collection variable for every other request.",
+    "description": "Employee Leave Management System API. Run 'Login as Employee' or 'Login as Manager' first \u2014 the token is auto-saved to the {{token}} collection variable for every other request. Note: GET /leaves/{id} now also returns an auditLog array (append-only activity trail).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    { "key": "baseUrl", "value": "http://localhost:5000/api" },
-    { "key": "token", "value": "" },
-    { "key": "leaveId", "value": "" }
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "leaveId",
+      "value": ""
+    }
   ],
   "item": [
     {
@@ -28,8 +37,16 @@
           ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"email\": \"alice@company.com\",\n  \"password\": \"Password123!\"\n}" },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"alice@company.com\",\n  \"password\": \"Password123!\"\n}"
+            },
             "url": "{{baseUrl}}/auth/login"
           }
         },
@@ -48,8 +65,16 @@
           ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"email\": \"manager@company.com\",\n  \"password\": \"Password123!\"\n}" },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"manager@company.com\",\n  \"password\": \"Password123!\"\n}"
+            },
             "url": "{{baseUrl}}/auth/login"
           }
         },
@@ -57,7 +82,12 @@
           "name": "Get current user",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
             "url": "{{baseUrl}}/auth/me"
           }
         },
@@ -65,7 +95,12 @@
           "name": "Logout",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
             "url": "{{baseUrl}}/auth/logout"
           }
         }
@@ -78,7 +113,12 @@
           "name": "Get dashboard summary",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
             "url": "{{baseUrl}}/dashboard"
           }
         },
@@ -86,15 +126,39 @@
           "name": "List employees (manager only)",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
-            "url": { "raw": "{{baseUrl}}/employees?search=", "host": ["{{baseUrl}}"], "path": ["employees"], "query": [{ "key": "search", "value": "" }] }
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/employees?search=",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "employees"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": ""
+                }
+              ]
+            }
           }
         },
         {
           "name": "Get employee by id",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
             "url": "{{baseUrl}}/employees/1"
           }
         }
@@ -108,14 +172,25 @@
           "event": [
             {
               "listen": "test",
-              "script": { "exec": ["const data = pm.response.json();", "if (data.leave) pm.collectionVariables.set('leaveId', data.leave.id);"] }
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "if (data.leave) pm.collectionVariables.set('leaveId', data.leave.id);"
+                ]
+              }
             }
           ],
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -128,15 +203,47 @@
           "name": "List my/all leave requests",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
-            "url": { "raw": "{{baseUrl}}/leaves?status=&leaveType=&search=", "host": ["{{baseUrl}}"], "path": ["leaves"], "query": [{ "key": "status", "value": "" }, { "key": "leaveType", "value": "" }, { "key": "search", "value": "" }] }
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/leaves?status=&leaveType=&search=",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "leaves"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": ""
+                },
+                {
+                  "key": "leaveType",
+                  "value": ""
+                },
+                {
+                  "key": "search",
+                  "value": ""
+                }
+              ]
+            }
           }
         },
         {
           "name": "List pending approvals (manager only)",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
             "url": "{{baseUrl}}/leaves/pending"
           }
         },
@@ -144,7 +251,12 @@
           "name": "Get leave request by id",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
             "url": "{{baseUrl}}/leaves/{{leaveId}}"
           }
         },
@@ -153,8 +265,14 @@
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -167,7 +285,12 @@
           "name": "Cancel leave request (owner, pending only)",
           "request": {
             "method": "DELETE",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
             "url": "{{baseUrl}}/leaves/{{leaveId}}"
           }
         },
@@ -176,10 +299,19 @@
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
-            "body": { "mode": "raw", "raw": "{\n  \"comments\": \"Enjoy your trip!\"\n}" },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"comments\": \"Enjoy your trip!\"\n}"
+            },
             "url": "{{baseUrl}}/leaves/{{leaveId}}/approve"
           }
         },
@@ -188,10 +320,19 @@
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
-            "body": { "mode": "raw", "raw": "{\n  \"comments\": \"Team is short-staffed that week.\"\n}" },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"comments\": \"Team is short-staffed that week.\"\n}"
+            },
             "url": "{{baseUrl}}/leaves/{{leaveId}}/reject"
           }
         }
@@ -200,7 +341,13 @@
     {
       "name": "Health",
       "item": [
-        { "name": "Health check", "request": { "method": "GET", "url": "{{baseUrl}}/health" } }
+        {
+          "name": "Health check",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/health"
+          }
+        }
       ]
     }
   ]
