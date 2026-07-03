@@ -1,0 +1,207 @@
+{
+  "info": {
+    "name": "Leave Management System",
+    "description": "Employee Leave Management System API. Run 'Login as Employee' or 'Login as Manager' first — the token is auto-saved to the {{token}} collection variable for every other request.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000/api" },
+    { "key": "token", "value": "" },
+    { "key": "leaveId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login as Employee",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.collectionVariables.set('token', data.token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"alice@company.com\",\n  \"password\": \"Password123!\"\n}" },
+            "url": "{{baseUrl}}/auth/login"
+          }
+        },
+        {
+          "name": "Login as Manager",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.collectionVariables.set('token', data.token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"manager@company.com\",\n  \"password\": \"Password123!\"\n}" },
+            "url": "{{baseUrl}}/auth/login"
+          }
+        },
+        {
+          "name": "Get current user",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/auth/me"
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/auth/logout"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard & Employees",
+      "item": [
+        {
+          "name": "Get dashboard summary",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/dashboard"
+          }
+        },
+        {
+          "name": "List employees (manager only)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/employees?search=", "host": ["{{baseUrl}}"], "path": ["employees"], "query": [{ "key": "search", "value": "" }] }
+          }
+        },
+        {
+          "name": "Get employee by id",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/employees/1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Leave Requests",
+      "item": [
+        {
+          "name": "Create leave request",
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["const data = pm.response.json();", "if (data.leave) pm.collectionVariables.set('leaveId', data.leave.id);"] }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"leaveType\": \"CASUAL\",\n  \"startDate\": \"2026-08-01\",\n  \"endDate\": \"2026-08-02\",\n  \"reason\": \"Personal work\"\n}"
+            },
+            "url": "{{baseUrl}}/leaves"
+          }
+        },
+        {
+          "name": "List my/all leave requests",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/leaves?status=&leaveType=&search=", "host": ["{{baseUrl}}"], "path": ["leaves"], "query": [{ "key": "status", "value": "" }, { "key": "leaveType", "value": "" }, { "key": "search", "value": "" }] }
+          }
+        },
+        {
+          "name": "List pending approvals (manager only)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/leaves/pending"
+          }
+        },
+        {
+          "name": "Get leave request by id",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/leaves/{{leaveId}}"
+          }
+        },
+        {
+          "name": "Update leave request (owner, pending only)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"leaveType\": \"CASUAL\",\n  \"startDate\": \"2026-08-03\",\n  \"endDate\": \"2026-08-04\",\n  \"reason\": \"Updated reason\"\n}"
+            },
+            "url": "{{baseUrl}}/leaves/{{leaveId}}"
+          }
+        },
+        {
+          "name": "Cancel leave request (owner, pending only)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/leaves/{{leaveId}}"
+          }
+        },
+        {
+          "name": "Approve leave request (manager only)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"comments\": \"Enjoy your trip!\"\n}" },
+            "url": "{{baseUrl}}/leaves/{{leaveId}}/approve"
+          }
+        },
+        {
+          "name": "Reject leave request (manager only)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"comments\": \"Team is short-staffed that week.\"\n}" },
+            "url": "{{baseUrl}}/leaves/{{leaveId}}/reject"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "item": [
+        { "name": "Health check", "request": { "method": "GET", "url": "{{baseUrl}}/health" } }
+      ]
+    }
+  ]
+}
