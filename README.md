@@ -93,7 +93,7 @@ leave-management-system/
 
 ### 1. Clone and enter the project
 ```bash
-git clone <your-repo-url>
+git clone [<your-repo-url>](https://github.com/Muskan3909/Leave-Management-System)
 cd leave-management-system
 ```
 
