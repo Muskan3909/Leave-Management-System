@@ -8,6 +8,7 @@ const authRoutes = require('./routes/authRoutes');
 const employeeRoutes = require('./routes/employeeRoutes');
 const leaveRoutes = require('./routes/leaveRoutes');
 const { notFound, errorHandler } = require('./middleware/errorHandler');
+const { apiLimiter } = require('./middleware/rateLimiter');
 
 const app = express();
 
@@ -15,6 +16,7 @@ app.use(helmet());
 app.use(cors({ origin: process.env.CLIENT_ORIGIN || 'http://localhost:5173' }));
 app.use(express.json());
 app.use(morgan('dev'));
+app.use('/api', apiLimiter);
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
 
